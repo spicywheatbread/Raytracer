@@ -28,19 +28,22 @@ class ofApp : public ofBaseApp {
         void drawGrid();
         void drawAxis(glm::vec3 position);
     
+        // Initialization functions
         void guiSetup();
         void cameraSetup();
         void objectSetup();
         void lightSetup();
-    
-        void updateParameters();
+        
+        // Object container functions
         void removeObject(SceneObject* obj);
-        bool mouseToDragPlane(int x, int y, glm::vec3& point);
         bool objSelected() { return !selected.empty(); };
         void clearSelectionList();
+    
+        // Helper functions
+        bool mouseToDragPlane(int x, int y, glm::vec3& point);
         ofColor scaleColor(ofColor color, float scale);
         SceneObject* shortestIntersection(const Ray& r, glm::vec3& point, glm::vec3& normal);
-        glm::vec3 reflectVector(const Ray& inRay, glm::vec3 normal);
+        glm::vec3 reflectVector(glm::vec3 incomingDirection, glm::vec3 normal);
         bool isShadow(const Ray& shadowRay, BaseLight& light);
 
     
@@ -54,9 +57,12 @@ class ofApp : public ofBaseApp {
         void rayTracePixel(ofImage& img, const int u, const int v);
         void rayTrace(ofImage& img);
     
+        // GUI functions
         void addPointLightButtonPressed();
         void addSphereButtonPressed();
+        void updateParameters();
     
+        // Bools for showing bojects
         bool bHide = true;
         bool bShowImage = true;
 
@@ -68,9 +74,10 @@ class ofApp : public ofBaseApp {
         ofCamera* theCam;    // set to current camera either mainCam or sideCam
         RenderCam renderCam;
     
+        // Pointlight for scene lighting preview
         ofLight ofPointLight;
     
-        // UI elements
+        // GUI panel for rendering parameters
         ofxPanel renderParamGui;
         ofParameter<std::string> renderParamGuiLabel;
         ofParameter<float> diffuseCoefficientSlider;
@@ -79,23 +86,25 @@ class ofApp : public ofBaseApp {
         ofParameter<int> phongPowerSlider;
         ofParameter<int> lightBounceSlider;
 
+        // GUI panel for information about an object
         ofxPanel objectGui;
         ofParameter<std::string> objectGuiLabel;
         ofParameter<glm::vec3> objectPositionSlider;
         ofParameter<ofColor> objectDiffuseColor;
         ofParameter<ofColor> objectSpecularColor;
     
+        // GUI Panel for adding objects
         ofxPanel addGui;
         ofxButton addPointLightButton;
         ofxButton addSphereButton;
+    
         // Vectors that hold objects and lights
         vector<SceneObject*> scene;
         vector<BaseLight*> sceneLights;
         vector<ofImage*> textures;
-    
         vector<SceneObject*> selected;
     
-        // Variables I guess!
+        // Placeholder variables for dragging functions
         glm::vec3 lastPoint;
         glm::vec3 dragPlane;
 
@@ -107,9 +116,10 @@ class ofApp : public ofBaseApp {
         bool bDrag = false;
         bool bSftKeyDown = false;
     
-        float specularCoefficient = 0.0;
-        float diffuseCoefficient = 0.0;
+        // Rendering parameters
+        float specularCoefficient;
+        float diffuseCoefficient;
         float ambientLight;
-        float phongPower = 1;
-        int lightBounces = 2;
+        float phongPower;
+        int lightBounces;
 };

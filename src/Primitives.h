@@ -1,9 +1,3 @@
-//
-//  Primitives.h - Simple 3D Primitives with with Hierarchical Transformations
-//
-//  
-//  (c) Kevin M. Smith  - 24 September 2018
-//
 #pragma once
 
 #include "ofMain.h"

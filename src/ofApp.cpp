@@ -1,21 +1,17 @@
 #include "ofApp.h"
-#include <cmath>
-#include <math.h>
-#include <algorithm>
-#include <numbers>
-#include <thread>
 
 #define SHADOWOFFSET 50
 
-glm::vec3 ofApp::reflectVector(const Ray& inRay, glm::vec3 normal) {
-    glm::vec3 incomingDirection = inRay.direction;
+// Implementation of vector reflection formula
+glm::vec3 ofApp::reflectVector(glm::vec3 incomingDirection, glm::vec3 normal) {
     glm::vec3 projection = 2 * glm::dot(incomingDirection, normal) * normal;
     glm::vec3 reflection = incomingDirection - projection;
 
     return reflection;
 }
 void ofApp::clearSelectionList() {
-    for (int i = 0; i < selected.size(); i++) {
+    for (int i = 0; i < selected.size(); i++) 
+    {
         selected[i]->isSelected = false;
     }
     selected.clear();
@@ -42,21 +38,19 @@ SceneObject* ofApp::shortestIntersection(const Ray& r, glm::vec3& point, glm::ve
     }
     return obj;
 }
-/*
- This is called on the object closest to the camera during raytracing.
- Ray shot from viewplane, store normal & intersection point, diffuseCol of obj, light in scene.
-*/
+
+// Helper function to scale a color without altering the alpha value
 ofColor ofApp::scaleColor(ofColor color, float scale) {
     return ofColor(color.r * scale, color.g * scale, color.b * scale, color.a);
 }
+// Helper function to determine whether a ray will cause a shadow with a light
 bool ofApp::isShadow(const Ray& shadowRay, BaseLight& light) {
-    if(light.getIntensity(&shadowRay) == 0.0) {
+    if(light.getIntensity(&shadowRay) == 0.0) { // This is mostly for spotlight, check if ray is within spotlight bound
         return true;
     }
     glm::vec3 intersectionPoint; // Placeholder variables to store function results
     glm::vec3 intersectionNormal;
     
-    // Shadow detection
     /*
      Two reasons for things to be in shadow:
      1. There's an object between the light and the intersection point
@@ -69,11 +63,12 @@ bool ofApp::isShadow(const Ray& shadowRay, BaseLight& light) {
             if(glm::distance(intersectionPoint, shadowRay.position) < distanceToLight) { // And its between the obj and the light
                 return true;
             }
-        } // You can just return the value of the if statements.
+        }
     }
     return false;
 }
 
+// Base function for raytracing
 ofColor ofApp::shade(const Ray& incomingRay, BaseLight& light, int iterations) {
     // Start with a base color to be added onto with shading algorithm
     ofColor shadedColor = ofColor(0, 0, 0);
@@ -94,16 +89,16 @@ ofColor ofApp::shade(const Ray& incomingRay, BaseLight& light, int iterations) {
     }
     delete shadowRay; // No shadow, calculate color value using specular and diffuse lighitng
     
+    // this mess is because i added on cel shading at the end of my project lmao
     shadedColor += lambert(intersectionPoint, intersectionNormal, intersectedObject->getDiffuseColor(intersectionPoint), light, intersectedObject->celShaded);
     if(!intersectedObject->celShaded) {
         shadedColor += phong(incomingRay, intersectionPoint, intersectionNormal, intersectedObject->getSpecularColor(intersectionPoint), phongPower, light);
     }
-
     
-    glm::vec3 reflection = reflectVector(incomingRay, intersectionNormal);
+    glm::vec3 reflection = reflectVector(incomingRay.direction, intersectionNormal);
     Ray* bounceRay = new Ray(intersectionPoint, reflection);
-    // TO DO!!! dont multiply the alpha vlaue!!!or maybe do? experiment.
     shadedColor += shade(*bounceRay, light, iterations - 1) * intersectedObject->reflectivity;
+    
     delete bounceRay;
     return shadedColor;
 }
@@ -133,7 +128,7 @@ ofColor ofApp::lambert(const glm::vec3& point, const glm::vec3& normal, const of
     Ray* lightRay = new Ray(light.position, glm::normalize(point - light.position));
     // Scale rbg components by these components
     float scale = diffuseCoefficient * cos * light.getIntensity(lightRay) / pow(glm::distance(point, light.position), 2);
-    if(celShade) { // Try mapping to hard values? guessin ghere
+    if(celShade) { // Try mapping to hard values? guessin here
         if(scale > 0.5) {
             scale = 1.0;
         } else {
@@ -211,7 +206,7 @@ void ofApp::drawGrid() {
         v += pixelHeight;
     }
 }
-bool ofApp::shadowPass(Ray& cameraRay) {
+bool ofApp::outlinePass(Ray& cameraRay) {
     Ray* outlineRay = new Ray(cameraRay.position, glm::normalize(renderCam.aim));
     glm::vec3 intersectionPoint, intersectionNormal;
     SceneObject* intersectedObject = shortestIntersection(cameraRay, intersectionPoint, intersectionNormal);
@@ -239,7 +234,7 @@ void ofApp::rayTrace(ofImage& img) {
 
             Ray cameraRay = renderCam.getRay(float(u + 0.5) / img.getWidth(), float(v + 0.5) / img.getHeight());  // getRay uses normalized coordinates, so we need to offset the pixel to the center as well as divide it by the image dimension
 
-            if(shadowPass(cameraRay)) {
+            if(outlinePass(cameraRay)) {
                 img.setColor(u, img.getHeight() - 1 - v, ofColor::black);
             } else {
                 ofColor totalColor = ambient(cameraRay);

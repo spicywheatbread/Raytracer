@@ -5,7 +5,6 @@
 //  (c) Kevin M. Smith  - 24 September 2018
 //
 
-#include "ofApp.h"
 #include "Primitives.h"
 
 Sphere::Sphere(glm::vec3 position, float radius, ofColor diffuse, float reflectivity, bool celShaded) {
